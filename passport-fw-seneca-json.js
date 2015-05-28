@@ -2,18 +2,26 @@
  * Passport Framework for Seneca, JSON communication
  */
 'use strict';
+var Promise = require('bluebird');
+
+function defer() {
+    var resolve, reject;
+    var promise = new Promise(function() {
+        resolve = arguments[0];
+        reject = arguments[1];
+    });
+    return {
+        resolve: resolve,
+        reject: reject,
+        promise: promise
+    };
+}
 
 
 exports.initialize = function() {};
 
-exports.authenticate = function authenticate(passport, name, options, callback) {
-	if (typeof options == 'function') {
-		callback = options;
-		options = {};
-	}
+exports.authenticate = function authenticate(passport, name, options) {
 	options = options || {};
-
-	var multi = true;
 
 	// Cast `name` to an array, allowing authentication to pass through a chain of
 	// strategies.  The first strategy to succeed, redirect, or error will halt
@@ -27,17 +35,16 @@ exports.authenticate = function authenticate(passport, name, options, callback) 
 	// redirect will halt the chain.
 	if (!Array.isArray(name)) {
 		name = [name];
-		multi = false;
 	}
 
 	return function authenticate(message) {
 
 		var failures = [];
 
-		var responsePromise = new Promise();
+		var response = defer();
 
 		function allFailed() {
-			responsePromise.resolve({
+			response.resolve({
 				success: false,
 				falures: failures
 			});
@@ -52,7 +59,10 @@ exports.authenticate = function authenticate(passport, name, options, callback) 
 			// a new instance.  Action functions will then be bound to the strategy
 			// within the context of the HTTP request/response pair.
 			var prototype = passport._strategy(layer);
-			if (!prototype) { return next(new Error('Unknown authentication strategy "' + layer + '"')); }
+			if (!prototype) {
+				response.reject(new Error('Unknown authentication strategy "' + layer + '"'));
+				return;
+			}
 
 			var strategy = Object.create(prototype);
 
@@ -79,7 +89,7 @@ exports.authenticate = function authenticate(passport, name, options, callback) 
 			 * @api public
 			 */
 			strategy.success = function(user, info) {
-				responsePromise.resolve({
+				response.resolve({
 					success: true,
 					result : 'success',
 					user   : user,
@@ -120,7 +130,7 @@ exports.authenticate = function authenticate(passport, name, options, callback) 
 			 * @api public
 			 */
 			strategy.redirect = function(url, status) {
-				responsePromise.resolve({
+				response.resolve({
 					success: true,
 					result: 'redirect',
 					url: url,
@@ -138,7 +148,7 @@ exports.authenticate = function authenticate(passport, name, options, callback) 
 			 * @api public
 			 */
 			strategy.pass = function() {
-				next();
+				//next();
 			};
 
 			/**
@@ -152,15 +162,15 @@ exports.authenticate = function authenticate(passport, name, options, callback) 
 			 * @api public
 			 */
 			strategy.error = function(err) {
-				responsePromise.reject(err);
+				response.reject(err);
 			};
 
 			// ----- END STRATEGY AUGMENTATION -----
 
-			strategy.authenticate(req, options);
+			strategy.authenticate(message, options);
 		})(0); // attempt
 
-		return responsePromise;
+		return response.promise;
 	}
 };
 

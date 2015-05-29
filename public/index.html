@@ -7,6 +7,7 @@
     <title>Demo Auth App</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 </head>
 <body>
@@ -15,17 +16,19 @@
     <input class="form-control" id="status" type="text" disabled>
 </div>
 
-<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 <script>
     var login = function() {
         $('#twitterLogin').addClass('btn-disabled');
         $('#status').val('Requesting token...');
 
         $.getJSON('/auth/twitter', function(data) {
-            window.open(data.redirectURL);
-            $('#status').val('Awaiting successful redirect...');
-            $('#twitterLogin').removeClass('btn-disabled');
+            if (data.success) {
+                if (data.result === 'redirect') {
+                    window.open(data.url, 'twitter_login', "width=800,height=400,resizable,scrollbars=yes,status=1");
+                    $('#status').val('Awaiting successful redirect...');
+                    $('#twitterLogin').removeClass('btn-disabled');
+                }
+            }
         });
     };
 

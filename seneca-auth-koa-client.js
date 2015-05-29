@@ -1,8 +1,6 @@
 'use strict';
 
 var     _ = require('lodash'),
-    Promise = require('bluebird'),
-    seneca = Promise.promisifyAll(require('seneca')()),
     router = require('koa-router')();
 
 const defaults = {
@@ -10,16 +8,18 @@ const defaults = {
     callback_url: '/auth/:strategy/callback'
 };
 
-const scriptResponse = "<script>try{window.opener.postMessage('authTokenSet')}catch(e){}window.close()</script>";
+const scriptResponse = "<script>try{window.opener.postMessage('authTokenSet',window.location.origin)}catch(e){}window.close()</script>";
 
-module.exports = function(options) {
+module.exports = function(seneca_instance, options) {
+    var seneca = seneca_instance || require('seneca')();
+
     options = _.extend(defaults, options);
 
     var buildAuthArgs = function(ctx) {
         var queryParams = ['request_token', 'verify_token', 'oauth_token'];
         var sessionParams = ['oauth_token_secret'];
         var authArgs = _.pick(ctx.req.query, queryParams);
-        authArgs = authArgs.extend(_.pick(ctx.session), sessionParams);
+        authArgs = _.extend(authArgs, _.pick(ctx.session), sessionParams);
         authArgs.auth = 'authenticate';
         authArgs.strategy = ctx.strategy;
         return authArgs;

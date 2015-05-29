@@ -1,14 +1,13 @@
 'use strict';
 
 var _ = require('lodash');
-var seneca = require('seneca')();
 var passport = require('passport');
 var TwitterStrategy = require('passport-twitter').Strategy;
 
 var conf = {
     key    : process.env.TWITTER_KEY,
     secret : process.env.TWITTER_SECRET,
-    urlhost: "http://advansb.uk.dev:3018"
+    urlhost: "http://localhost:3018"
 };
 
 passport.use('twitter', new TwitterStrategy({
@@ -32,19 +31,23 @@ passport.use('twitter', new TwitterStrategy({
 
 passport.framework(require('./passport-fw-seneca-json'));
 
-seneca.add({ auth: 'authenticate' }, function(args, done) {
-    var auth = passport.authenticate(args.strategy);
+module.exports = function(seneca_instance) {
+    var seneca = seneca_instance || require('seneca')();
 
-    var params = {
-        session: ['request_token', 'oauth_token_secret'],
-        query: ['oauth_token', 'verify_token']
-    };
+    seneca.add({auth: 'authenticate'}, function (args, done) {
+        var auth = passport.authenticate(args.strategy);
 
-    var session = {};
-    session['oauth:' + args.strategy] = _.pick(args, params.session);
+        var params = {
+            session: ['request_token', 'oauth_token_secret'],
+            query: ['oauth_token', 'verify_token']
+        };
 
-    auth({ session: session, query: _.pick(args, params.query) })
-        .then(function(result) {
-            done(null, result);
-        });
-});
+        var session = {};
+        session['oauth:' + args.strategy] = _.pick(args, params.session);
+
+        auth({session: session, query: _.pick(args, params.query)})
+            .then(function (result) {
+                done(null, result);
+            });
+    });
+}

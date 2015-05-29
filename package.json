@@ -22,6 +22,7 @@
     "ejs-locals": "~1.0.2",
     "express": "~4.9.5",
     "express-session": "~1.8.2",
+    "jsonwebtoken": "^5.0.1",
     "koa": "^0.21.0",
     "koa-router": "^5.0.1",
     "koa-session": "^3.1.0",

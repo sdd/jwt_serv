@@ -3,6 +3,7 @@
 var _ = require('lodash');
 var passport = require('passport');
 var TwitterStrategy = require('passport-twitter').Strategy;
+var jwt = require('jsonwebtoken');
 
 var conf = {
     key    : process.env.TWITTER_KEY,
@@ -47,6 +48,12 @@ module.exports = function(seneca_instance) {
 
         auth({session: session, query: _.pick(args, params.query)})
             .then(function (result) {
+
+                if (session['oauth:' + args.strategy].oauth_token_secret) {
+                    result.oauth_token_secret = session['oauth:' + args.strategy].oauth_token_secret;
+                }
+                console.log(result);
+
                 done(null, result);
             });
     });

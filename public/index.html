@@ -21,10 +21,13 @@
         $('#twitterLogin').addClass('btn-disabled');
         $('#status').val('Requesting token...');
 
+        var waitDataURI = "data:text/html;base64,PGh0bWw+PGJvZHk+PGgxIHN0eWxlPSJmb250LWZhbWlseTpoZWx2ZXRpY2E7dGV4dC1hbGlnbjpjZW50ZXI7Y29sb3I6I2FhYTtmb250LXNpemU6MTRweDsiPlBsZWFzZSBXYWl0Li4uPC9oMT48L2JvZHk+PC9odG1sPg==";
+        var popupRef = window.open(waitDataURI, 'twitter_login', "width=800,height=400,resizable,scrollbars=yes,status=1");
+
         $.getJSON('/auth/twitter', function(data) {
             if (data.success) {
                 if (data.result === 'redirect') {
-                    window.open(data.url, 'twitter_login', "width=800,height=400,resizable,scrollbars=yes,status=1");
+                    popupRef.location.href = data.url;
                     $('#status').val('Awaiting successful redirect...');
                     $('#twitterLogin').removeClass('btn-disabled');
                 }

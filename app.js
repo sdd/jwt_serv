@@ -2,9 +2,11 @@
 
 var _ = require('lodash');
 var Promise = require('bluebird');
-var seneca = require('seneca')();
+
 var koa = require('koa');
 var session = require('koa-session');
+
+var seneca = require('seneca')();
 seneca.actAsync = Promise.promisify(seneca.act, seneca);
 
 var authHandler = require('./seneca-auth-handler')(seneca);

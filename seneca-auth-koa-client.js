@@ -15,10 +15,10 @@ module.exports = function(seneca_instance, options) {
     options = _.extend(defaults, options);
 
     var buildAuthArgs = function(ctx) {
-        var queryParams = ['request_token', 'verify_token', 'oauth_token'];
+        var queryParams = ['request_token', 'oauth_verifier', 'oauth_token'];
         var sessionParams = ['oauth_token_secret'];
-        var authArgs = _.pick(ctx.req.query, queryParams);
-        authArgs = _.extend(authArgs, _.pick(ctx.session), sessionParams);
+        var authArgs = _.pick(ctx.request.query, queryParams);
+        authArgs = _.extend(authArgs, _.pick(ctx.session, sessionParams));
         authArgs.auth = 'authenticate';
         authArgs.strategy = ctx.strategy;
         return authArgs;
@@ -36,17 +36,18 @@ module.exports = function(seneca_instance, options) {
             this.session.oauth_token_secret = result.oauth_token_secret;
             delete result.oauth_token_secret;
         }
-        console.log(this.session);
         this.body = result;
     });
 
     router.get(options.callback_url, function* () {
 
-        console.log('CALLBACK');
-        console.log(this.req);
         var authResponse = yield seneca.actAsync(buildAuthArgs(this));
 
-        this.cookies.set('jwt', 'an example cookie', { signed: true });
+        if (authResponse.success && authResponse.result === 'success') {
+	        console.info(authResponse);
+            this.cookies.set('jwt', 'an example cookie', { signed: true });
+        }
+
         this.body = scriptResponse;
     });
 

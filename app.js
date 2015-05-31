@@ -14,6 +14,7 @@ var authHandler = require('./seneca-auth-handler')(seneca);
 var app = koa();
 app.keys = ['SeeCr3Ts'];
 app.use(session(app));
+
 app.use(require('koa-static')('public'));
 
 app.use(require('./seneca-auth-koa-client')(seneca));

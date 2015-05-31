@@ -39,10 +39,12 @@
         if (event.origin !== window.location.origin) {
             $('#status').val('ERROR: bad postMessage origin, ' + event.origin);
         } else {
-            if (event.data !== 'authTokenSet') {
-                $('#status').val('ERROR: Unknown postMessage: ' + event.data);
-            } else {
+            if (event.data === 'authTokenSet') {
                 $('#status').val('Login successful.');
+            } else if (event.data === 'authTokenFailed') {
+                $('#status').val('Login failed.');
+            } else {
+                $('#status').val('ERROR: Unknown postMessage: ' + event.data);
             }
         }
     }, false);

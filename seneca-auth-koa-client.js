@@ -7,14 +7,16 @@ const defaults = {
     callback_url: '/auth/:strategy/callback'
 };
 
-const scriptResponse = "<script>try{window.opener.postMessage('authTokenSet',window.location.origin)}catch(e){}window.close()</script>";
+const scriptResponse = function(message) {
+	return `<script>try{window.opener.postMessage('${message}',window.location.origin)}catch(e){}window.close()</script>`;
+};
 
 module.exports = function(seneca_instance, options) {
     var seneca = seneca_instance || require('seneca')();
 
     options = _.extend(defaults, options);
 
-    var buildAuthArgs = function(ctx) {
+    const buildAuthArgs = function(ctx) {
         var queryParams = ['request_token', 'oauth_verifier', 'oauth_token'];
         var sessionParams = ['oauth_token_secret'];
         var authArgs = _.pick(ctx.request.query, queryParams);
@@ -46,9 +48,10 @@ module.exports = function(seneca_instance, options) {
         if (authResponse.success && authResponse.result === 'success') {
 	        console.info(authResponse);
             this.cookies.set('jwt', 'an example cookie', { signed: true });
+	        this.body = scriptResponse('authTokenSet');
+        } else {
+	        this.body = scriptResponse('authTokenFailed');
         }
-
-        this.body = scriptResponse;
     });
 
     return router.middleware();

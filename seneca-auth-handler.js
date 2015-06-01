@@ -46,7 +46,7 @@ var mapArgsToAuth = function(args, session) {
 module.exports = function(seneca_instance) {
     var seneca = seneca_instance || require('seneca')();
 
-    seneca.add({auth: 'authenticate'}, function (args, done) {
+    seneca.add({system: 'auth', action: 'auth'}, function (args, done) {
         var auth = passport.authenticate(args.strategy);
 
         var session = {};
@@ -54,18 +54,22 @@ module.exports = function(seneca_instance) {
         auth(mapArgsToAuth(args, session))
             .then(function (result) {
 
-                if (result.success && result.result === 'success') {
-                    result.system = 'user';
-                    result.action = 'login';
+                if (result.result === 'redirect') {
+                    result.oauth_token_secret = _.get(session, `['oauth:${args.strategy}'].oauth_token_secret`);
+                    done(null, result);
+
+                } else if (result.result === 'success') {
+                    _.extend(result, {system: 'user', action: 'login'});
                     seneca.actAsync(result)
-                        .then(function(user) {
+                        .then(function (user) {
+
                             user.success = true;
                             user.result = 'success';
                             done(null, user);
                         }).catch(done);
+
                 } else {
-                    result.oauth_token_secret = _.get(session, `['oauth:${args.strategy}'].oauth_token_secret`);
-                    done(null, result);
+                    done(result);
                 }
             });
     });

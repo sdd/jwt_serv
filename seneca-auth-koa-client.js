@@ -17,13 +17,15 @@ module.exports = function(seneca_instance, options) {
     options = _.extend(defaults, options);
 
     const buildAuthArgs = function(ctx) {
-        var queryParams = ['request_token', 'oauth_verifier', 'oauth_token'];
-        var sessionParams = ['oauth_token_secret'];
-        var authArgs = _.pick(ctx.request.query, queryParams);
-        authArgs = _.extend(authArgs, _.pick(ctx.session, sessionParams));
-        authArgs.auth = 'authenticate';
-        authArgs.strategy = ctx.strategy;
-        return authArgs;
+        const maps = [
+            { source: 'request.query', params: ['request_token', 'oauth_verifier', 'oauth_token'] },
+            { source: 'session', params: ['oauth_token_secret'] }
+        ];
+        let authArgs = _.reduce(maps, (acc, map) =>
+            _.extend(acc, _.pick(_.get(ctx, map.source), map.params))
+        , {});
+
+        return _.extend(authArgs, { system: 'auth', action: 'auth', strategy: ctx.strategy });
     };
 
     router.param('strategy', function *(strategy, next) {
@@ -45,7 +47,7 @@ module.exports = function(seneca_instance, options) {
 
         var authResponse = yield seneca.actAsync(buildAuthArgs(this));
 
-        if (authResponse.success && authResponse.result === 'success') {
+        if (authResponse.result === 'success') {
 	        console.info(authResponse);
             this.cookies.set('jwt', authResponse.user, { signed: true });
 	        this.body = scriptResponse('authTokenSet');

@@ -18,8 +18,11 @@ var Login = thinky.createModel('Login', {
 	id         : type.string(),
 	userId     : type.string(),
 	accountId  : type.string(),
-	platform   : type.string()
+	provider   : type.string()
 });
+
+Login.ensureIndex('identifier', doc => doc('provider').add(doc('accountId')));
+Login.ensureIndex('identifier', [r.row("last_name"), r.row("first_name")]));
 
 // Join the models
 User.hasMany(Login, 'Logins', 'id', 'userId');

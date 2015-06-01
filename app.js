@@ -18,8 +18,8 @@ app.keys = ['SeeCr3Ts'];
 app.use(session(app));
 
 // Middleware below this line is only reached if JWT token is valid
-// unless the URL starts with '/public or /auth or /connect'
-app.use(jwt({ secret: process.env.JWT_KEY }).unless({ path: [/^\/(public|auth|connect|)/] }));
+// unless the URL is root or starts with '/public, /auth, or /connect'
+app.use(jwt({ secret: process.env.JWT_KEY }).unless({ path: [/^\/(|public|auth|connect)/] }));
 
 app.use(require('koa-static')('public'));
 
@@ -27,8 +27,6 @@ app.use(require('koa-static')('public'));
 app.use(require('./seneca-auth-koa-client')(seneca));
 
 //app.use(require('./seneca-user').middleware);
-
-
 
 app.listen(3018);
 console.log('listening on port 3018');

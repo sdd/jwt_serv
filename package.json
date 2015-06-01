@@ -24,6 +24,7 @@
     "express-session": "~1.8.2",
     "jsonwebtoken": "^5.0.1",
     "koa": "^0.21.0",
+    "koa-jwt": "^1.1.0",
     "koa-router": "^5.0.1",
     "koa-session": "^3.1.0",
     "koa-static": "^1.4.9",
@@ -39,6 +40,7 @@
     "seneca-jsonrest-api": "~0.3.1",
     "seneca-perm": "~0.4.0",
     "seneca-user": "~0.2.10",
-    "serve-static": "~1.6.3"
+    "serve-static": "~1.6.3",
+    "thinky": "^2.0.5"
   }
 }

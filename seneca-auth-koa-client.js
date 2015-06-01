@@ -49,7 +49,7 @@ module.exports = function(seneca_instance, options) {
 
         if (authResponse.result === 'success') {
 	        console.info(authResponse);
-            this.cookies.set('jwt', authResponse.user, { signed: true });
+            this.cookies.set('jwt', JSON.stringify(authResponse), { signed: true });
 	        this.body = scriptResponse('authTokenSet');
         } else {
 	        this.body = scriptResponse('authTokenFailed');

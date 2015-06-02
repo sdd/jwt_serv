@@ -41,7 +41,7 @@
         $('#getUser').addClass('btn-disabled');
         $('#status').val('Requesting user...');
 
-        $.getJSON('/user', function(data) {
+        $.getJSON('/user/current', function(data) {
             if (data.success) {
                 $('#status').val('User: ' + JSON.stringify(data.user));
             } else {

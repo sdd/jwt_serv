@@ -54,8 +54,7 @@ module.exports = function(seneca_instance) {
 
                 return login.saveAll()
                     // store the created userId
-                    .then(function() {
-                        userId = user.id; });
+                    .then(function() { userId = user.id; });
             })
             // At this point we should have a valid login. Use it to get the
             // user so that we have a user wth a linked login rather than the reverse

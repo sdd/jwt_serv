@@ -5,11 +5,11 @@ var router = require('koa-router')();
 module.exports = function(seneca) {
 
     router.get('/user/current', function* () {
-        if (_.get(this, 'state.user.user.id')) {
+        if (_.get(this, 'state.user.sub')) {
             var response = yield seneca.actAsync({
                 system: 'user',
                 action: 'get',
-                id: this.state.user.user.id
+                id: this.state.user.sub
             });
 
             if (response.success) {

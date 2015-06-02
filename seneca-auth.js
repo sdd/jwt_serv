@@ -67,9 +67,9 @@ module.exports = function(seneca_instance) {
             return seneca.actAsync({system: 'user', action: 'login', query: response})
                 .then(function (response) {
                     var token = jwt.sign(
-                        { user: { id: response.user.id, name: response.user.name } },
+                        { detail: { name: response.user.name } },
                         process.env.JWT_KEY,
-                        { expiresInMinutes: 60, issuer: 'jwt_serv' }
+                        { expiresInMinutes: 60, subject: response.user.id }
                     );
                     return { success: true, result: 'success', user: response.user, jwt: token };
                 });

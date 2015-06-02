@@ -1,10 +1,6 @@
-/**
- * Created by scotty on 31/05/2015.
- */
 'use strict';
 
 var _ = require('lodash');
-var router = require('koa-router')();
 
 var r = require('rethinkdb');
 var thinky = require('thinky')();
@@ -72,21 +68,8 @@ module.exports = function(seneca_instance) {
             .then(user => ({ success:true, user:user }))
 	});
 
-    router.get('/user', function* () {
-        if (_.get(this, 'state.user.user.id')) {
-            var response = yield seneca.actAsync({
-                system: 'user',
-                action: 'get',
-                id: this.state.user.user.id
-            });
-
-            if (response.success) {
-                return this.body = response;
-            }
-        }
-
-        this.status = 500;
-    });
-
-	return router;
+	return {
+        koa: function() { return require('./seneca-user-koa')(seneca); }
+    };
 };
+module.exports.koa = function(seneca) { return require('./seneca-user-koa')(seneca); };

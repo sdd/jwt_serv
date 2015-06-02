@@ -44,9 +44,10 @@ var mapArgsToAuth = function(args, session) {
     }
 };
 
+var seneca = null;
 
 module.exports = function(seneca_instance) {
-    const seneca = seneca_instance || require('seneca')();
+    seneca = seneca_instance || require('seneca')();
 
     seneca.addAsync({system: 'auth', action: 'auth'}, function (args) {
         let auth = passport.authenticate(args.strategy);
@@ -79,5 +80,9 @@ module.exports = function(seneca_instance) {
         }
     };
 
-    return seneca;
+    return {
+        koa: function() { return require('./seneca-auth-koa')(seneca); }
+    };
 };
+
+module.exports.koa = function(seneca) { return require('./seneca-auth-koa')(seneca); };

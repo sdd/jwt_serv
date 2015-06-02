@@ -10,7 +10,7 @@ var jwt = require('koa-jwt');
 var session = require('koa-session');
 
 var seneca = require('seneca')();
-seneca.actAsync = Promise.promisify(seneca.act, seneca);
+seneca.use('seneca-bluebird');
 
 var authHandler = require('./seneca-auth-handler')(seneca);
 var userHandler = require('./seneca-user')(seneca);
@@ -18,7 +18,6 @@ var userHandler = require('./seneca-user')(seneca);
 var app = koa();
 app.keys = ['SeeCr3Ts'];
 app.use(session(app));
-
 
 // Middleware below this line is only reached if JWT token is valid
 // unless the URL is root or starts with '/public, /auth, or /connect'

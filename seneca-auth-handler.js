@@ -44,43 +44,40 @@ var mapArgsToAuth = function(args, session) {
     }
 };
 
+
 module.exports = function(seneca_instance) {
     const seneca = seneca_instance || require('seneca')();
 
-    seneca.add({system: 'auth', action: 'auth'}, function (args, done) {
+    seneca.addAsync({system: 'auth', action: 'auth'}, function (args) {
         let auth = passport.authenticate(args.strategy);
+        var session = {};
 
-        let session = {};
-
-        auth(mapArgsToAuth(args, session))
-            .then(function (response) {
-
-                if (response.result === 'redirect') {
-                    response.oauth_token_secret = _.get(session, `['oauth:${args.strategy}'].oauth_token_secret`);
-                    done(null, response);
-
-                } else if (response.result === 'success') {
-                    seneca.actAsync({system: 'user', action: 'login', query: response})
-                        .then(function (response) {
-
-                            // create a JWT
-                            var token = jwt.sign(
-                                { user: { id: response.user.id, name: response.user.name } },
-                                process.env.JWT_KEY,
-                                {
-                                    expiresInMinutes: 60,
-                                    issuer: 'jwt_serv'
-                                }
-                            );
-
-                            done(null, { success: true, result: 'success', user: response.user, jwt: token });
-                        }).catch(done);
-
-                } else {
-                    done(response);
-                }
-            });
+        return auth(mapArgsToAuth(args, session))
+            .then(response => handler.get(response.result)(response, session, args.strategy))
     });
+
+    var handler = {
+        redirect: function(response, session, strategy) {
+            response.oauth_token_secret = _.get(session, `['oauth:${strategy}'].oauth_token_secret`);
+            return response;
+        },
+
+        success: function(response) {
+            return seneca.actAsync({system: 'user', action: 'login', query: response})
+                .then(function (response) {
+                    var token = jwt.sign(
+                        { user: { id: response.user.id, name: response.user.name } },
+                        process.env.JWT_KEY,
+                        { expiresInMinutes: 60, issuer: 'jwt_serv' }
+                    );
+                    return { success: true, result: 'success', user: response.user, jwt: token };
+                });
+        },
+
+        get: function(name) {
+            return this[name] || function() { return Promise.reject(`Unknown response result ${response.result}`) }
+        }
+    };
 
     return seneca;
 };

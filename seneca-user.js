@@ -25,7 +25,6 @@ var Login = thinky.createModel('Login', {
 });
 
 Login.ensureIndex('identifier');
-//Login.ensureIndex('identifier', function(doc) { return [doc('provider'), doc('accountId')] }, { multi: true });
 
 // Join the models
 User.hasMany(Login, 'Logins', 'id', 'userId');
@@ -36,53 +35,41 @@ module.exports = function(seneca_instance) {
 
 	// pass in a passport user profile. If the user exists, return
 	// a new User object. If not, register the user and return the new User.
-	seneca.add({system: 'user', action: 'login'}, function(args, done) {
+	seneca.addAsync({system: 'user', action: 'login'}, function(args) {
 
 		var userId = null;
+        var identifier = `${args.query.user.userdata.provider}-${args.query.user.userdata.id}`;
 
-		Login.getAll(`${args.query.user.userdata.provider}-${args.query.user.userdata.id}`, {index: 'identifier'}).run()
+		return Login.getAll(identifier, {index: 'identifier'})
+            .run()
+            .then(login => login.length ? login : Promise.reject())
+            .catch(function(err) {
 
-		//Login.getAll(
-		//	r.expr({ provider: args.user.userdata.provider, accountId: args.user.userdata.id }).coerceTo('array'),
-		//	{ index: 'identifier' }
-		//).run()
+                if (err) throw err;
 
-		.then(login => login.length ? login : Promise.reject())
-		.catch(function(err) {
+                // not found? Create User and Login
+                args.query.user.userdata.accountId = args.query.user.userdata.id;
+                delete args.query.user.userdata.id;
+                args.query.user.userdata.identifier = identifier;
 
-			if (err) throw err;
+                var login = new Login(args.query.user.userdata);
+                var user = new User({ name: args.query.user.name });
+                login.user = user;
 
-			// not found? Create User and Login
-			args.query.user.userdata.accountId = args.query.user.userdata.id;
-			delete args.user.userdata.id;
-			args.query.user.userdata.identifier = `${args.query.user.userdata.provider}-${args.query.user.userdata.accountId}`;
-
-			var login = new Login(args.query.user.userdata);
-			var user = new User({ name: args.query.user.name });
-
-			login.user = user;
-
-			return login.saveAll().then(function() {
-				userId = user.id;
-			});
-		}).then(login =>
-			// at this point we should have a valid login.
-			// use it to get the user so that we have a top
-			// level user wth a linked login rather than the reverse
-			User.get(login[0].userId || userId).getJoin()
-
-		).then(function(user) {
-			done(null, { success: true, user: user});
-		}).catch(done);
-
+                return login.saveAll()
+                    // store the created userId
+                    .then(function() {
+                        userId = user.id; });
+            })
+            // At this point we should have a valid login. Use it to get the
+            // user so that we have a user wth a linked login rather than the reverse
+            .then(login => User.get(_.get(login, '[0].userId') || userId).getJoin())
+            .then(user => ({ success: true, user: user}));
 	});
 
-	seneca.add({system: 'user', action: 'get'}, function(args, done) {
-		User.get(args.id).getJoin().then(function(user) {
-			done(null, { success:true, user:user } );
-		}).catch(function(error) {
-			done(error);
-		})
+	seneca.addAsync({system: 'user', action: 'get'}, function(args) {
+		return User.get(args.id).getJoin()
+            .then(user => ({ success:true, user:user }))
 	});
 
     router.get('/user', function* () {

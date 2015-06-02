@@ -50,6 +50,7 @@ module.exports = function(seneca_instance, options) {
         if (authResponse.result === 'success') {
 	        console.info(authResponse);
             this.cookies.set('jwt', authResponse.jwt, { signed: true });
+            this.session = null;
 
             this.body = scriptResponse('authTokenSet');
         } else {

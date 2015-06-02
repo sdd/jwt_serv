@@ -46,7 +46,8 @@ exports.authenticate = function authenticate(passport, name, options) {
 		function allFailed() {
 			response.resolve({
 				success: false,
-				falures: failures
+                result: 'failure',
+				failures: failures
 			});
 		}
 

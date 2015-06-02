@@ -11,9 +11,11 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 </head>
 <body>
-<div class="container-fluid">
+<div class="container">
     <button id="twitterLogin" onclick="login()" class="btn btn-primary btn-lg" type="submit">Login</button>
     <input class="form-control" id="status" type="text" disabled>
+
+    <button id="getUser" onclick="getUser()" class="btn btn-default btn-lg" type="submit">Get User</button>
 </div>
 
 <script>
@@ -32,6 +34,22 @@
                     $('#twitterLogin').removeClass('btn-disabled');
                 }
             }
+        });
+    };
+
+    var getUser = function() {
+        $('#getUser').addClass('btn-disabled');
+        $('#status').val('Requesting user...');
+
+        $.getJSON('/user', function(data) {
+            if (data.success) {
+                $('#status').val('User: ' + JSON.stringify(data.user));
+            } else {
+                $('#status').val('User request failed.');
+            }
+            $('#getUser').removeClass('btn-disabled');
+        }).fail(function(jqxhr, status, error) {
+            $('#status').val('User request failed: ' + jqxhr.status + ' ' + error);
         });
     };
 

@@ -3,11 +3,12 @@
 var _ = require('lodash');
 var passport = require('passport');
 var TwitterStrategy = require('passport-twitter').Strategy;
+var jwt = require('jsonwebtoken');
 
-var conf = {
+const conf = {
     key    : process.env.TWITTER_KEY,
     secret : process.env.TWITTER_SECRET,
-    urlhost: "http://localhost:3018"
+    urlhost: "https://localhost:3018"
 };
 
 passport.use('twitter', new TwitterStrategy({
@@ -16,7 +17,7 @@ passport.use('twitter', new TwitterStrategy({
         callbackURL   : conf.urlhost + "/auth/twitter/callback"
     },
     function(token, tokenSecret, profile, done) {
-        var data = {
+        let data = {
             nick       : profile.username,
             name       : profile.displayName,
             identifier : '' + profile.id,
@@ -31,7 +32,7 @@ passport.use('twitter', new TwitterStrategy({
 passport.framework(require('./passport-fw-seneca-json'));
 
 var mapArgsToAuth = function(args, session) {
-    var params = {
+    const params = {
         session: ['request_token', 'oauth_token_secret'],
         query  : ['oauth_token', 'oauth_verifier']
     };
@@ -44,35 +45,42 @@ var mapArgsToAuth = function(args, session) {
 };
 
 module.exports = function(seneca_instance) {
-    var seneca = seneca_instance || require('seneca')();
+    const seneca = seneca_instance || require('seneca')();
 
     seneca.add({system: 'auth', action: 'auth'}, function (args, done) {
-        var auth = passport.authenticate(args.strategy);
+        let auth = passport.authenticate(args.strategy);
 
-        var session = {};
+        let session = {};
 
         auth(mapArgsToAuth(args, session))
-            .then(function (result) {
+            .then(function (response) {
 
-                if (result.result === 'redirect') {
-                    result.oauth_token_secret = _.get(session, `['oauth:${args.strategy}'].oauth_token_secret`);
-                    done(null, result);
+                if (response.result === 'redirect') {
+                    response.oauth_token_secret = _.get(session, `['oauth:${args.strategy}'].oauth_token_secret`);
+                    done(null, response);
 
-                } else if (result.result === 'success') {
-                    _.extend(result, {system: 'user', action: 'login'});
-                    seneca.actAsync(result)
-                        .then(function (user) {
+                } else if (response.result === 'success') {
+                    seneca.actAsync({system: 'user', action: 'login', query: response})
+                        .then(function (response) {
 
-                            user.success = true;
-                            user.result = 'success';
-                            done(null, user);
+                            // create a JWT
+                            var token = jwt.sign(
+                                { user: { id: response.user.id, name: response.user.name } },
+                                process.env.JWT_KEY,
+                                {
+                                    expiresInMinutes: 60,
+                                    issuer: 'jwt_serv'
+                                }
+                            );
+
+                            done(null, { success: true, result: 'success', user: response.user, jwt: token });
                         }).catch(done);
 
                 } else {
-                    done(result);
+                    done(response);
                 }
             });
     });
 
     return seneca;
-}
+};

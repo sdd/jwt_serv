@@ -15,7 +15,9 @@ var app = koa();
 app.keys = ['SeeCr3Ts'];
 app.use(session(app));
 
-app.use(jwt({ secret: process.env.JWT_KEY }).unless({ path: [/^\/($|public|auth|connect)/] }));
+app.use(jwt({ secret: process.env.JWT_KEY, cookie: 'jwt', key: 'jwt' })
+	.unless({ path: [/^\/($|public|auth|connect)/] })
+);
 
 app.use(require('koa-static')('public'));
 

@@ -18,7 +18,7 @@ module.exports = function(seneca_instance, options) {
 
     const buildAuthArgs = function(ctx) {
         const maps = [
-            { source: 'request.query', params: ['request_token', 'oauth_verifier', 'oauth_token'] },
+            { source: 'request.query', params: ['request_token', 'oauth_verifier', 'oauth_token', 'code', 'client_id'] },
             { source: 'session', params: ['oauth_token_secret'] }
         ];
         let authArgs = _.reduce(maps, (acc, map) =>

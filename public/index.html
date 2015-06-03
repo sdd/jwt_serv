@@ -12,7 +12,9 @@
 </head>
 <body>
 <div class="container">
-    <button id="twitterLogin" onclick="login()" class="btn btn-primary btn-lg" type="submit">Login</button>
+    <button id="googleLogin" onclick="login('google')" class="loginButton btn btn-primary btn-lg" type="submit">Login with Google</button>
+    <button id="facebookLogin" onclick="login('facebook')" class="loginButton btn btn-primary btn-lg" type="submit">Login with Facebook</button>
+    <button id="twitterLogin" onclick="login('twitter')" class="loginButton btn btn-primary btn-lg" type="submit">Login with Twitter</button>
     <input class="form-control" id="status" type="text" disabled>
 
     <button id="getUser" onclick="getUser()" class="btn btn-default btn-lg" type="submit">Get User</button>
@@ -21,19 +23,19 @@
 <script>
     var popupRef = null;
 
-    var login = function() {
-        $('#twitterLogin').addClass('btn-disabled');
+    var login = function(strategy) {
+        $('.loginButton').addClass('btn-disabled');
         $('#status').val('Requesting token...');
 
         var waitDataURI = "data:text/html;base64,PGh0bWw+PGJvZHk+PGgxIHN0eWxlPSJmb250LWZhbWlseTpoZWx2ZXRpY2E7dGV4dC1hbGlnbjpjZW50ZXI7Y29sb3I6I2FhYTtmb250LXNpemU6MTRweDsiPlBsZWFzZSBXYWl0Li4uPC9oMT48L2JvZHk+PC9odG1sPg==";
-        popupRef = window.open(waitDataURI, 'twitter_login', "width=800,height=400,resizable,scrollbars=yes,status=1");
+        popupRef = window.open(waitDataURI, strategy + '_login', "width=800,height=400,resizable,scrollbars=yes,status=1");
 
-        $.getJSON('/auth/twitter', function(data) {
+        $.getJSON('/auth/' + strategy, function(data) {
             if (data.success) {
                 if (data.result === 'redirect') {
                     popupRef.location.href = data.url;
                     $('#status').val('Awaiting successful redirect...');
-                    $('#twitterLogin').removeClass('btn-disabled');
+                    $('.loginButton').removeClass('btn-disabled');
                 }
             }
         }).fail(function(jqxhr, status, error) {
@@ -66,10 +68,10 @@
                 $('#status').val('Login successful.');
             } else if (event.data === 'authTokenFailed') {
                 $('#status').val('Login failed.');
-                popupRef && popupRef.close && popupRef.close();
+                //popupRef && popupRef.close && popupRef.close();
             } else {
                 $('#status').val('ERROR: Unknown postMessage: ' + event.data);
-                popupRef && popupRef.close && popupRef.close();
+                //popupRef && popupRef.close && popupRef.close();
             }
         }
     }, false);

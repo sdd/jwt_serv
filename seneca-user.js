@@ -26,7 +26,7 @@ Login.ensureIndex('identifier');
 User.hasMany(Login, 'Logins', 'id', 'userId');
 Login.belongsTo(User, 'user', 'userId', 'id');
 
-module.exports = function(seneca_instance) {
+module.exports = function(config, seneca_instance) {
 	var seneca = seneca_instance || require('seneca')();
 
 	// pass in a passport user profile. If the user exists, return

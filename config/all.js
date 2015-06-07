@@ -7,8 +7,8 @@ module.exports = {
 
 	jwt:{
 		secret: process.env.JWT_KEY,
-		cookiename: 'jwt',
-		key: 'kwt'
+		cookie: 'jwt',
+		key: 'jwt'
 	},
 
 	ssl: {

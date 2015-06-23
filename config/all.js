@@ -2,7 +2,7 @@ module.exports = {
 	port: 3018,
 
 	koa: {
-		keys: ['secrets'],
+		keys: ['secrets']
 	},
 
 	jwt:{
@@ -18,6 +18,7 @@ module.exports = {
 	},
 
 	auth: {
+
 		twitter: {
 			key   : process.env.TWITTER_KEY,
 			secret: process.env.TWITTER_SECRET

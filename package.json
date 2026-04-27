@@ -47,7 +47,7 @@
     "seneca-jsonrest-api": "~0.3.1",
     "seneca-perm": "~0.4.0",
     "seneca-user": "~0.2.10",
-    "serve-static": "~1.6.3",
+    "serve-static": "~1.16.0",
     "thinky": "^2.0.5"
   }
 }
